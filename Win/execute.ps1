@@ -5,7 +5,7 @@ function isURI($address) {
   ($address -as [System.URI]).AbsoluteURI -ne $null 
 }
 function getExe() {
-  return (Get-Item N_*.exe).fullname
+  return (Get-Item N_*.exe -Exclude '*SimpleG*').fullname
 }
 $CurrentDir = (Get-Item .).FullName
 # Deal the URI ==================================================
