@@ -1,7 +1,6 @@
 #!/usr/bin/env pwsh
 param ($URI, $Proxy, $Extra)
 $ErrorActionPreference = 'Stop'
-$SaveName = 'notFoundName'
 
 function isURI($address) { 
   ($address -as [System.URI]).AbsoluteURI -ne $null 
