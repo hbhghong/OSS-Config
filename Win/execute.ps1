@@ -1,12 +1,28 @@
 #!/usr/bin/env pwsh
+param ($URI, $Proxy, $Extra)
 $ErrorActionPreference = 'Stop'
+$SaveName = 'notFoundName'
 
 function isURI($address) { 
   ($address -as [System.URI]).AbsoluteURI -ne $null 
 }
-function getExe() {
+function getExe {
   return (Get-Item N_*.exe -Exclude '*SimpleG*').fullname
 }
+function dealTheURI($address) {
+  if ($address -eq $null) {
+  $(throw "URI parameter is required.")
+}
+  $address = $address.Trim()
+  if (!$address.endswith('/')) {
+    $address = $address + '/'
+  }
+  if (!(isURI($address))) {
+    throw "The URI is not a valid URI"
+  }
+  return $address
+}
+
 $CurrentDir = (Get-Item .).FullName
 # Deal the URI ==================================================
 
@@ -16,15 +32,17 @@ if (!$URI) {
 if ($args.Length -eq 1) {
   $URI = $args.Get(0)
 }
-$URI = $URI.Trim()
-if (!$URI.endswith('/')) {
-  $URI = $URI + '/'
+$URI = dealTheURI($URI)
+$temp = ($URI -as [System.URI]).Segments
+if ($temp.Length -eq 1) {
+  throw "The URI not catain the file name"
 }
-if (!(isURI($URI))) {
-  exit -1
+$SaveName = $temp[$temp.Length - 1].replace('/', '')
+
+echo "URI: $URI"  "SaveName: $SaveName"
+if ($Proxy -ne $null) {
+  echo "Proxy: $Proxy"
 }
-$SaveName = ($URI -as [System.URI]).Segments[2].replace('/', '')
-echo "uri: $URI"  "savename: $SaveName"
 # Find m3u8 link ==================================================
 
 $m3u8 = iwr "$URI" -useb | select content | sls -Pattern 'https?\:\/\/.+\.m3u8' -ALL | Foreach {$_.matches[0].value}
@@ -52,7 +70,15 @@ $N_m3u8DL_EXE = getExe
 echo "N_m3u8DL_EXE: $N_m3u8DL_EXE"
 
 if (Test-path $N_m3u8DL_EXE) {
-  iex -Command "$N_m3u8DL_EXE $m3u8 --workDir '.' --saveName $SaveName --enableDelAfterDone "
+  $command = "$N_m3u8DL_EXE $m3u8 --workDir '.' --saveName $SaveName --enableDelAfterDone "
+  if ($Proxy) {
+    $command += " --proxyAddress '$Proxy'"
+  }
+  if ($Extra) {
+    $command += " $Extra"
+  }
+  echo "execute command: $command"
+  iex -Command "$command"
 } else {
   exit -1
 }
