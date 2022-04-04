@@ -73,7 +73,7 @@ Write-Output "N_m3u8DL_EXE: $N_m3u8DL_EXE"
 
 Try {
   if (Test-path $N_m3u8DL_EXE) {
-    $command = "$N_m3u8DL_EXE $m3u8 --workDir '.' --saveName $SaveName --enableDelAfterDone "
+    $command = "&'$N_m3u8DL_EXE' $m3u8 --workDir '.' --saveName $SaveName --enableDelAfterDone "
     if ($Proxy) {
       $command += " --proxyAddress '$Proxy'"
     }
