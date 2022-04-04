@@ -1,17 +1,18 @@
 #!/usr/bin/env pwsh
 param ($URI, $Proxy, $Extra)
 $ErrorActionPreference = 'Stop'
+$SaveName = 'notFoundName'
 
 function isURI($address) { 
-  ($address -as [System.URI]).AbsoluteURI -ne $null 
+  $null -ne ($address -as [System.URI]).AbsoluteURI 
 }
 function getExe {
   return (Get-Item N_*.exe -Exclude '*SimpleG*').fullname
 }
 function dealTheURI($address) {
-  if ($address -eq $null) {
-  $(throw "URI parameter is required.")
-}
+  if ($null -eq $address) {
+    $(throw "URI parameter is required.")
+  }
   $address = $address.Trim()
   if (!$address.endswith('/')) {
     $address = $address + '/'
@@ -26,6 +27,7 @@ $CurrentDir = (Get-Item .).FullName
 # Deal the URI ==================================================
 
 if (!$URI) {
+  # https://docs.microsoft.com/zh-cn/powershell/module/microsoft.powershell.core/about/about_environment_variables?view=powershell-7.2
   $URI = $env:URI
 }
 if ($args.Length -eq 1) {
@@ -38,14 +40,14 @@ if ($temp.Length -eq 1) {
 }
 $SaveName = $temp[$temp.Length - 1].replace('/', '')
 
-echo "URI: $URI"  "SaveName: $SaveName"
-if ($Proxy -ne $null) {
-  echo "Proxy: $Proxy"
+Write-Output "URI: $URI"  "SaveName: $SaveName"
+if ($null -ne $Proxy) {
+  Write-Output "Proxy: $Proxy"
 }
 # Find m3u8 link ==================================================
 
-$m3u8 = iwr "$URI" -useb | select content | sls -Pattern 'https?\:\/\/.+\.m3u8' -ALL | Foreach {$_.matches[0].value}
-echo "m3u8 path: $m3u8"
+$m3u8 = (Invoke-WebRequest "$URI" -useb).content | Select-String -Pattern 'https?\:\/\/.+\.m3u8' -ALL | ForEach-Object {$_.matches[0].value}
+Write-Output "m3u8 path: $m3u8"
 
 # call Call the N_m3u8DL-CLI  ==================================================
 
@@ -66,18 +68,27 @@ if ( -not ((getExe -ne $null) -and (getExe | Test-path)) )  {
   Remove-Item $N_m3u8DL_ZIP
 }
 $N_m3u8DL_EXE = getExe
-echo "N_m3u8DL_EXE: $N_m3u8DL_EXE"
+Write-Output "N_m3u8DL_EXE: $N_m3u8DL_EXE"
 
-if (Test-path $N_m3u8DL_EXE) {
-  $command = "$N_m3u8DL_EXE $m3u8 --workDir '.' --saveName $SaveName --enableDelAfterDone "
-  if ($Proxy) {
-    $command += " --proxyAddress '$Proxy'"
+Try {
+  if (Test-path $N_m3u8DL_EXE) {
+    $command = "$N_m3u8DL_EXE $m3u8 --workDir '.' --saveName $SaveName --enableDelAfterDone "
+    if ($Proxy) {
+      $command += " --proxyAddress '$Proxy'"
+    }
+    if ($Extra) {
+      $command += " $Extra"
+    }
+    Write-Output "execute command: $command"
+    Invoke-Expression -Command "$command"
+  } else {
+    throw "N_m3u8DL_EXE not found"
+    exit -1
   }
-  if ($Extra) {
-    $command += " $Extra"
+} Finally {
+  if (Test-path $SaveName) {
+    Write-Host "\r`nCleaning the resource..."
+    Remove-Item -Recurse -Force $SaveName
   }
-  echo "execute command: $command"
-  iex -Command "$command"
-} else {
-  exit -1
 }
+
