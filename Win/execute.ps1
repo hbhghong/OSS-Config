@@ -26,13 +26,14 @@ function dealTheURI($address) {
 $CurrentDir = (Get-Item .).FullName
 # Deal the URI ==================================================
 
+if ($args.Length -eq 1) {
+  $URI = $args.Get(0)
+}
 if (!$URI) {
   # https://docs.microsoft.com/zh-cn/powershell/module/microsoft.powershell.core/about/about_environment_variables?view=powershell-7.2
   $URI = $env:URI
 }
-if ($args.Length -eq 1) {
-  $URI = $args.Get(0)
-}
+
 $URI = dealTheURI($URI)
 $temp = ($URI -as [System.URI]).Segments
 if ($temp.Length -eq 1) {
