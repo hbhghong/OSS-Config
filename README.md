@@ -4,5 +4,5 @@
 All Scripts, Configs.
 </p>
 <p align="center">
-This repo build for other code retrive purpose
+This repo build for other action retrive purpose
 </p>
