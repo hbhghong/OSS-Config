@@ -46,8 +46,12 @@ if ($null -ne $Proxy) {
   Write-Output "Proxy: $Proxy"
 }
 # Find m3u8 link ==================================================
-
-$m3u8 = (Invoke-WebRequest "$URI" -useb).content | Select-String -Pattern 'https?\:\/\/.+\.m3u8' -ALL | ForEach-Object {$_.matches[0].value}
+$m3u8 = $URI
+if($URI -like '*.m3u8'){
+  $m3u8 = $URI
+}else{
+  $m3u8 = (Invoke-WebRequest "$URI" -useb).content | Select-String -Pattern 'https?\:\/\/.+\.m3u8' -ALL | ForEach-Object {$_.matches[0].value}
+}
 Write-Output "m3u8 path: $m3u8"
 
 # call Call the N_m3u8DL-CLI  ==================================================
