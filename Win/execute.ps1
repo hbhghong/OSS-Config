@@ -47,7 +47,7 @@ if ($null -ne $Proxy) {
 }
 # Find m3u8 link ==================================================
 $m3u8 = $URI
-if($URI -like '*.m3u8'){
+if($URI -like '*.m3u8*'){
   $m3u8 = $URI
 }else{
   $m3u8 = (Invoke-WebRequest "$URI" -useb).content | Select-String -Pattern 'https?\:\/\/.+\.m3u8' -ALL | ForEach-Object {$_.matches[0].value}
